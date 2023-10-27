@@ -404,7 +404,7 @@ df_vv_stats['segment'] = df_vv_stats['sample'].apply(lambda x: int(x//seg_length
 
 # Get NN avg using VV/2 (since all bigeminy)
 df_vv_stats['NN'] = df_vv_stats['VV']/2
-df_vv_stats.to_csv('output/df_vv_stats.csv')
+df_vv_stats.to_csv('output/df_vv_stats.csv', index=False)
 
 
 # Compute VV-VN regressions over each segment
