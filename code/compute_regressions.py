@@ -24,7 +24,6 @@ import plotly.graph_objects as go
 
 
 
-
 def get_nib_values(list_labels, verbose=0):
     '''
     Compute the NIB values for list of beat annotations list_labels
@@ -140,7 +139,6 @@ def compute_rr_nib_nnavg(df_beats):
     df_beats['nib'] = list_nib
 
     return df_beats
-
 
 
 
@@ -383,7 +381,6 @@ def make_histograms(df_reg):
     fig.update_xaxes(range=[0,1], col=2)
 
     return fig
-
 
 
 

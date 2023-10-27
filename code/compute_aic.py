@@ -55,7 +55,6 @@ seg_length = 5*60 # seconds
 df_vv_stats['segment'] = df_vv_stats['Time (s)'].apply(lambda x: int(x//seg_length))
 
 
-
 # Compute AIC score for reentry model in each segment
 
 def model_reentry(vn):

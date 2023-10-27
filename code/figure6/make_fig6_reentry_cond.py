@@ -4,7 +4,7 @@
 Created on Thu Oct 26 22:10:33 2023
 
 Make figure 6
-(a-b) Stacked linear regression plot for EAD model simulation
+Stacked linear regression plot for reentry+cond model simulation
  
 
 @author: tbury
@@ -22,7 +22,6 @@ import plotly.graph_objects as go
 import scipy.stats as stats
 
 import matplotlib.pyplot as plt
-
 
 
 def compute_regressions(df_vv_stats, pvc_thresh):
@@ -117,7 +116,6 @@ def compute_regressions_nv_nn(df_vv_stats, pvc_thresh):
     return df_reg
 
 
-
 sample_rate = 180
 
 # Import data
@@ -133,56 +131,33 @@ df_vv['VV'] = df_vv['VV']/sample_rate
 df_vv['nn_avg'] = df_vv['nn_avg']/sample_rate
 
 
-
-
 #-----------
-# Simulate EAD model
+# Simulate reentry model with conductio
 #------------
-
 
 # Get parameters
 b = df_reg['b'].mean()
+c = df_reg['c'].mean()
 sigma = np.sqrt(df_reg['unex_var'].mean())
 
-# # Do linear fit of interpolated intercept vs. <t_s> to determine c and gamma
-avg_vn = df_vv['VN'].mean()
-df_reg['intercept_interpolated'] = df_reg['c'] + df_reg['b']*avg_vn
-df_reg[['intercept_interpolated','nn_mean']].plot(x='nn_mean', y='intercept_interpolated',kind='scatter')
-
-# Compute linear regression
-xvals = df_reg['nn_mean']
-yvals = df_reg['intercept_interpolated']
-out = stats.linregress(xvals, yvals)
-
-slope, intercept, r, p, se_slope = out
-se_intercept = out.intercept_stderr
-reg_text = "y={}x + {},  R^2={}".format(round(slope, 4), round(intercept, 4), round(r**2, 4))
-
-# Determine gamma from NV-NN plot
-gamma = 0.42
-
-# Determine c from mean over differences in model
-c = (df_vv['VV'] - b*df_vv['VN'] - gamma*df_vv['nn_avg']).mean()
-
-
 # Simulate model using VN values of patient (in bigeminy)
+df_sim = df_vv[['VN', 'segment']].copy()
 
-df_sim = df_vv[['VN', 'segment', 'nn_avg']].copy()
+def model_reentry_cond(vn):
+    vv = b*vn + c + sigma*np.random.normal(0,1)
+    return vv
 
-# Model
-def model_ead(vn, nn_avg, b, c, gamma, sigma):
-    out = b*vn + c + gamma*nn_avg + sigma*np.random.normal(0,1)
-    return out
 
 df_sim['VV'] = df_sim.apply(
-    lambda row: model_ead(row['VN'], row['nn_avg'], b, c, gamma, sigma), 
+    lambda row: model_reentry_cond(row['VN']), 
     axis=1)
 
 df_sim['NV'] = df_sim['VV'] - df_sim['VN']
 df_sim['NN'] = df_sim['VV']/2
 
-# # Export
-# df_sim.to_csv('output/sim_ead.csv', index=False)
+
+# # # Export
+# # df_sim.to_csv('output/sim_ead.csv', index=False)
 
 
 #------------
@@ -222,7 +197,6 @@ for segment in df_reg['segment'].unique():
                         'segment':dic['segment'], 'r':dic['r']})
     list_df.append(df)
 
-
 df_plot = pd.concat(list_df)
 
 
@@ -235,19 +209,24 @@ fig.update_layout(showlegend=False)
 fig.update_traces(line=dict(width=1))
 
 fig.update_xaxes(title='VN (s)', 
-                    range=[0.5,1.7],
-                  )
+                    range=[0.45,1.75],
+                    tick0=0.6,
+                    dtick=0.2,
+                    )
 fig.update_yaxes(title='VV (s)', 
-                    range=[0.9,2.35],
-                  )
+                    range=[0.89,2.19],
+                    tick0=1,
+                    dtick=0.2,
+                    )
 
 fig.update_layout(height=300,
                   width=300,
                   margin=dict(l=10, r=10, t=10, b=10)
                   )
 
-fig.write_image('../../results/figure6a.png', scale=2,)
 
+# fig.write_image('temp.png', scale=2,)
+fig.write_image('../../results/figure6c.png', scale=2,)
 
 
 
@@ -301,7 +280,7 @@ fig.update_xaxes(title='t_s (s)',
                     range=[0.45,1.1],
                   )
 fig.update_yaxes(title='NV (s)', 
-                    range=[0.3,0.65],
+                    range=[0.36,0.63],
                   )
 
 fig.update_layout(height=300,
@@ -309,7 +288,7 @@ fig.update_layout(height=300,
                   margin=dict(l=10, r=10, t=10, b=10)
                   )
 
-fig.write_image('../../results/figure6b.png', scale=2,)
+fig.write_image('../../results/figure6d.png', scale=2,)
 
 
 
