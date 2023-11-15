@@ -23,7 +23,6 @@ from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 
 
-
 def get_nib_values(list_labels, verbose=0):
     '''
     Compute the NIB values for list of beat annotations list_labels
@@ -113,7 +112,7 @@ def compute_rr_nib_nnavg(df_beats):
     df_temp = df_beats[df_beats['interval_type'].isin(['NN','NV','VN'])].copy()
     # Remove rows that have interval > 2s -  these are due to missing
     # noise label in data.
-    anomalies = df_temp[df_temp['interval']>2*250].index
+    anomalies = df_temp[df_temp['interval']>2*180].index
     df_temp = df_temp.drop(anomalies)
     
     # Count number of beats in each minute
@@ -139,7 +138,6 @@ def compute_rr_nib_nnavg(df_beats):
     df_beats['nib'] = list_nib
 
     return df_beats
-
 
 
 def get_vv_stats(record_id):
@@ -184,24 +182,6 @@ def get_vv_stats(record_id):
 
 
 
-
-
-# def get_vv_stats(record_id):
-#     df_beats = pd.read_csv('../data/{}_df_beats.csv'.format(record_id))
-    
-#     # Compute RR, NIB and NNavg
-#     df_beats = compute_rr_nib_nnavg(df_beats)
-    
-#     # Get VV stats
-#     df_vv_stats = df_beats.query('type=="V"')[['sample','nib', 'nn_avg']]
-#     df_vv_stats['VV'] = df_vv_stats['sample'].diff()
-#     df_vv_stats['NV'] = df_beats.loc[df_vv_stats.index]['interval']
-    
-#     df_vv_stats = df_vv_stats.query('nib!=-1').copy()
-#     idx_values = df_vv_stats.index - df_vv_stats['nib']
-#     df_vv_stats['VN'] = df_beats.loc[idx_values]['interval'].values    
-
-#     return df_vv_stats
 
 
 def compute_regressions_vv_vn(df_vv_stats, pvc_thresh, sample_rate):
