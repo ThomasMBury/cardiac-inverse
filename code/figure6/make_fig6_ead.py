@@ -250,7 +250,7 @@ fig.update_layout(height=300,
                   margin=dict(l=10, r=10, t=10, b=10)
                   )
 
-fig.write_image('../../results/figure6e.png', scale=2,)
+fig.write_image('../../results/figure6f.png', scale=2,)
 
 
 
@@ -314,7 +314,7 @@ fig.update_layout(height=300,
                   margin=dict(l=10, r=10, t=10, b=10)
                   )
 
-fig.write_image('../../results/figure6f.png', scale=2,)
+fig.write_image('../../results/figure6e.png', scale=2,)
 
 
 
