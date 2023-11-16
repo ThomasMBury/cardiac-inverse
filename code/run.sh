@@ -35,3 +35,4 @@ python make_fig6_reentry.py
 python make_fig6_reentry_cond.py
 python make_fig6_ead.py
 
+echo -e "-----\n Run complete"
