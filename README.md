@@ -33,7 +33,7 @@ The article is accompanied by a [code capsule](https://codeocean.com/capsule/335
 - Remove all files in `code/output` and `/results` directories to start with a clean slate [<1s]
   ```
   cd code
-  ./remove_output.sh
+  ./clear.sh
   ```
 
 - Run the code [~5 min]
