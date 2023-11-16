@@ -184,6 +184,7 @@ fig.update_yaxes(title='count')
 
 fig.write_image('../../results/figure4.png', scale=2)
 
+print('Figure 4 exported')
 
 
 

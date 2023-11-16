@@ -168,8 +168,6 @@ df_sim['NV'] = df_sim['VV'] - df_sim['VN']
 df_sim['NN'] = df_sim['VV']/2
 
 
-# # # Export
-# # df_sim.to_csv('output/sim_ead.csv', index=False)
 
 
 #------------

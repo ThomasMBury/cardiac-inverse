@@ -27,7 +27,6 @@ from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 
 
-
 #------------
 # Stacked plot for VV-VN linear regressions
 #-------------
@@ -217,5 +216,6 @@ fig.update_layout(height=200,
                   )
 fig.write_image('../../results/figure3c.png', scale=2,)
 
+print('Figure 3 exported')
 
 

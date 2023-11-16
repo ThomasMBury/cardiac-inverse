@@ -160,7 +160,6 @@ fig.write_image('../../results/figure2a.png', scale=2,)
 
 
 
-
 #--------------
 # Scatter plot for VV-VN for a particular segment
 #--------------
@@ -234,9 +233,6 @@ fig.write_image('../../results/figure2d.png', scale=2)
 
 
 
-
-
-
 #--------------
 # Scatter plot for NV vs NN for a particular segment
 #--------------
@@ -293,6 +289,7 @@ fig.update_layout(height=300,
 # fig.write_html('temp.html')
 fig.write_image('../../results/figure2c.png', scale=2)
 
+print('Figure 2 exported')
 
 
 

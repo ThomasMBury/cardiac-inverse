@@ -147,7 +147,7 @@ sigma = np.sqrt(df_reg['unex_var'].mean())
 # # Do linear fit of interpolated intercept vs. <t_s> to determine c and gamma
 avg_vn = df_vv['VN'].mean()
 df_reg['intercept_interpolated'] = df_reg['c'] + df_reg['b']*avg_vn
-df_reg[['intercept_interpolated','nn_mean']].plot(x='nn_mean', y='intercept_interpolated',kind='scatter')
+# df_reg[['intercept_interpolated','nn_mean']].plot(x='nn_mean', y='intercept_interpolated',kind='scatter')
 
 # Compute linear regression
 xvals = df_reg['nn_mean']
@@ -181,8 +181,6 @@ df_sim['VV'] = df_sim.apply(
 df_sim['NV'] = df_sim['VV'] - df_sim['VN']
 df_sim['NN'] = df_sim['VV']/2
 
-# # Export
-# df_sim.to_csv('output/sim_ead.csv', index=False)
 
 
 #------------

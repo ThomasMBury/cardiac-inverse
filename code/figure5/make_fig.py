@@ -98,8 +98,7 @@ fig.update_layout(height=400, width=400,
 
 fig.write_image('../../results/figure5b.png', scale=2)
 
-
-
+print('Figure 5 exported')
 
 
 

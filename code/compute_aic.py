@@ -21,41 +21,18 @@ import scipy.stats as stats
 import matplotlib.pyplot as plt
 
 
-# Get the VV, VN data of patient
-def import_vv_stats(record_id):
-
-    # Cornell data
-    fileroot='/Users/tbury/research_storage/holter_data/cornell/data_output/'
-
-    # Check existance of data file
-    filepath = fileroot+'nn_avg/{}_nnavg_rw4.csv'.format(record_id)
-    if not os.path.exists(filepath):
-        print('No data for record {}'.format(record_id))
-    
-    # Import data
-    df_nnavg = pd.read_csv(fileroot + 'nn_avg/{}_nnavg_rw4.csv'.format(record_id))
-    df_vv_stats = pd.read_csv(fileroot + 'vv_stats/{}_vv_stats.csv'.format(record_id))
-    
-    # Merge df_nnavg with VV stats data
-    df_vv_stats = df_vv_stats.merge(df_nnavg,
-                            how='left',
-                            on='Time (s)')    
-    print('Data imported for record {}'.format(record_id))
-    
-    # Get VV data where NIB=1
-    df_vv_stats = df_vv_stats[df_vv_stats['NIB']==1][['Time (s)', 'NV','VN','VV','NN avg']].copy()
-
-    return df_vv_stats
-
 record_id= '18'
-df_vv_stats = import_vv_stats(record_id)
-    
-# Add col for segment number
-seg_length = 5*60 # seconds
-df_vv_stats['segment'] = df_vv_stats['Time (s)'].apply(lambda x: int(x//seg_length))
+sample_rate = 180
+
+df_vv_stats = pd.read_csv('output/df_vv_stats.csv')
 
 
-# Compute AIC score for reentry model in each segment
+df_vv_stats['NN'] = df_vv_stats['NN']/sample_rate
+df_vv_stats['NV'] = df_vv_stats['NV']/sample_rate
+df_vv_stats['VN'] = df_vv_stats['VN']/sample_rate
+df_vv_stats['VV'] = df_vv_stats['VV']/sample_rate
+
+# Functions to compute AIC score for each model
 
 def model_reentry(vn):
     tlag = 0.47
@@ -63,7 +40,7 @@ def model_reentry(vn):
     return vv
 
 
-def model_reentry_cond(vn):
+def model_parasystole(vn):
     alpha=0.6
     beta = 0.11
     vv = (1-beta)*vn + alpha
@@ -79,7 +56,6 @@ def model_ead(vn, ts):
     return vv
     
 
-    
 def compute_aic_reentry(df):
     ''' Compute AIC in a single segment'''
     
@@ -99,11 +75,11 @@ def compute_aic_reentry(df):
     return aic, sse
 
 
-def compute_aic_reentry_cond(df):
+def compute_aic_parasystole(df):
     ''' Compute AIC in a single segment'''
     
     # Get predicitons form model
-    df['preds'] = df['VN'].apply(model_reentry_cond)
+    df['preds'] = df['VN'].apply(model_parasystole)
     
     # Get the SSE (sum of squared errors)
     sse = sum((df['preds'] - df['VV'])**2)
@@ -122,11 +98,9 @@ def compute_aic_ead(df):
     ''' Compute AIC in a single segment'''
     
     # Get predicitons form model
-    nn_avg = df['NN avg'].mean()
+    nn_avg = df['NN'].mean()
     
     df['preds'] = df.apply(lambda x: model_ead(x['VN'], nn_avg), axis=1)
-    
-
     
     # Get the SSE (sum of squared errors)
     sse = sum((df['preds'] - df['VV'])**2)
@@ -141,8 +115,7 @@ def compute_aic_ead(df):
     return aic, sse
 
 
-
-# Compute AIC for every segment
+# Compute AIC for every segment where >=40 PVCs
 list_dict = []
 
 list_segments = df_vv_stats['segment'].unique()
@@ -151,18 +124,21 @@ for segment in list_segments:
     
     df = df_vv_stats.query('segment==@segment').copy()
     
+    # If less than 40 PVCs do not include
+    if len(df)<40:
+        continue
     
     aic_reentry, sse_reentry = compute_aic_reentry(df)
-    aic_reentry_cond, sse_reentry_cond = compute_aic_reentry_cond(df)
+    aic_parasystole, sse_parasystole = compute_aic_parasystole(df)
     aic_ead, sse_ead = compute_aic_ead(df)
 
 
     d = {'segment':segment,
          'aic_reentry':aic_reentry,
-         'aic_reentry_cond':aic_reentry_cond,
+         'aic_parasystole':aic_parasystole,
          'aic_ead':aic_ead,
          'sse_reentry':sse_reentry,
-         'sse_reentry_cond':sse_reentry_cond,
+         'sse_reentry_cond':sse_parasystole,
          'sse_ead':sse_ead,
          'n': len(df)
          }
@@ -177,43 +153,16 @@ df_aic[df_aic['aic_ead']<df_aic['aic_reentry']]
 
 
 # Winner for each segment
-df_aic['winner'] = df_aic[['aic_reentry','aic_reentry_cond','aic_ead']].idxmin(axis=1)
+df_aic['winner'] = df_aic[['aic_reentry','aic_parasystole','aic_ead']].idxmin(axis=1)
 
 # Compute AIC score (probability that this model minimises the info loss)
-df_aic['min_aic'] = df_aic[['aic_reentry','aic_reentry_cond','aic_ead']].min(axis=1)
+df_aic['min_aic'] = df_aic[['aic_reentry','aic_parasystole','aic_ead']].min(axis=1)
 df_aic['aicS_reentry'] = df_aic.apply(lambda x: np.exp((x['min_aic'] - x['aic_reentry'])/2), axis=1)
-df_aic['aicS_reentry_cond'] = df_aic.apply(lambda x: np.exp((x['min_aic'] - x['aic_reentry_cond'])/2), axis=1)
+df_aic['aicS_parasystole'] = df_aic.apply(lambda x: np.exp((x['min_aic'] - x['aic_parasystole'])/2), axis=1)
 df_aic['aicS_ead'] = df_aic.apply(lambda x: np.exp((x['min_aic'] - x['aic_ead'])/2), axis=1)
 
 
-
 print(df_aic['winner'].value_counts())
-
-
-
-# Example plot of segment
-segment = 30
-df = df_vv_stats.query('segment==@segment').copy()
-nn_avg = df['NN avg'].mean()
-df['preds_reentry'] = df['VN'].apply(model_reentry)
-df['preds_reentry_cond'] = df['VN'].apply(model_reentry_cond)
-df['preds_ead'] = df.apply(lambda x: model_ead(x['VN'], nn_avg), axis=1)
-
-
-# print(df_aic.query('segment==@segment')['aic_reentry'])
-# print(df_aic.query('segment==@segment')['aic_reentry_cond'])
-# print(df_aic.query('segment==@segment')['aic_ead'])
-
-
-import plotly.express as px
-df_plot = df[['VN','VV','preds_reentry','preds_reentry_cond', 'preds_ead']]
-df_plot = df_plot.melt(id_vars ='VN')
-fig = px.scatter(df_plot, x='VN', y='value', color='variable')
-fig.write_html('temp.html')
-
-
-
-
 
 
 
